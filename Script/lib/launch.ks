@@ -3,7 +3,10 @@
 @lazyglobal off.
 //set steeringmanager:showfacingvectors to true.
 //set steeringmanager:showangularvectors to true.
-//set steeringmanager:showsteeringstats to true.
+//set steeringmanager:showsteeringstats totrue.
+
+sas on.
+set sasmode to "stabilityassist".
 
 global aoa_orbit to 0.
 global aoaToDirection to heading@:bind(90).
@@ -17,7 +20,7 @@ global h_p2_start to 0.
 global h_p3_start to 10000.
 global aoa_p2_start to 90.
 global aoa_p3_start to 45.
-global p23_aoa_power to 2.
+global p23_aoa_power to 9.
 
 function getP2Aoa {
     local progress to h / (h_p3_start - h_p2_start).
@@ -84,9 +87,9 @@ function launch {
     print "Heading for a circular orbit at altitude " + round(h_orbit) + "km and velocity " + round(v_orbit, 3) + " m/s".
     lock p1_over to ship:velocity:surface:mag > v_p2_start.
     if not p1_over {
-        set steeringmanager:pitchtorquefactor to 25.
+        set steeringmanager:pitchtorquefactor to 1.
         lock steering to aoaToDirection(90).
-        lock throttle to 1.
+        lock throttle to 0.
         stage.
     //set kuniverse:timewarp:rate to 3.
         print("Beginning P1 Lift-Off").
@@ -103,16 +106,17 @@ function launch {
     global engine_list to 1.
     list engines in engine_list.
 
-    set steeringmanager:pitchtorquefactor to 5.
-
     lock boosters_dead to boostersDead().
     lock p3_over to p2_over and (stage:number = 1 or boosters_dead).
     if not p3_over {
-        print("h=10km - Beginning P3 Tip-Over 2").
+        set steeringmanager:pitchtorquefactor to 20.
+        //set steeringmanager:pitchtorqueadjust to 200.
+        print("v>50m/s - Beginning P2 Tip-Over").
         lock steering to aoaToDirection(getP3Aoa()).
+        //lock steering to aoaToDirection(90).
         wait until boosters_dead.
         print "h=" + round(h) + " v=" + round(ship:velocity:orbit:mag) + " - boosters empty".
-        lock throttle to 0.2.
+        lock throttle to 0.
         stage.
         wait until stage:ready.
         wait until ship:availablethrust > 0.
@@ -121,8 +125,9 @@ function launch {
 
     lock p4_over to ship:orbit:periapsis >= 70000 and ship:orbit:apoapsis >= 70000.
     if not p4_over {
+        set steeringmanager:pitchtorquefactor to 1.
         print("Boosters empty - Beginning P4 Circularization").
-        set kuniverse:timewarp:rate to 4.
+        //set kuniverse:timewarp:rate to 4.
         lock steering to getP4ThrustDirection().
         lock throttle to getP4Throttle().
 

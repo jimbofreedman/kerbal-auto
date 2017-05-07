@@ -8,13 +8,13 @@ function deorbit {
     list engines in elist.
     elist[0]:activate().
 
-    print "Aligning retrograde for deorbit".
+    print "Aligning retrograde for deorbit at longitude " + ship:longitude.
 
     set kuniverse:timewarp:rate to 1.
 
-    wait until abs(ship:retrograde:pitch - ship:facing:pitch) < 0.1
-            and abs(ship:retrograde:yaw - ship:facing:yaw) < 0.1
-            and ship:angularmomentum:mag < 0.1.
+    wait until abs(ship:retrograde:pitch - ship:facing:pitch) < 0.2
+            and abs(ship:retrograde:yaw - ship:facing:yaw) < 0.2
+            and (ship:angularmomentum:mag/ship:mass) < 1.
 
     print "Waiting for correct longitude for landing".
 
@@ -28,7 +28,7 @@ function deorbit {
     lock throttle to 0.
     elist[0]:shutdown().
 
-    print "Dropping stages".
+    print "Dropping stages with " + stage:liquidfuel + " remaining".
 
     until stage:number = 0 {
         stage.
