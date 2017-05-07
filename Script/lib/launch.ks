@@ -20,7 +20,7 @@ global h_p2_start to 0.
 global h_p3_start to 10000.
 global aoa_p2_start to 90.
 global aoa_p3_start to 45.
-global p23_aoa_power to 9.
+global p23_aoa_power to 5.
 
 function getP2Aoa {
     local progress to h / (h_p3_start - h_p2_start).
@@ -48,7 +48,7 @@ lock t_to_apoapsis to ship:orbit:period * d_to_apoapsis.
 //lock a_side to ship:prograde:starvector * 2 * (-s_latitudinal - (v_lat * t_to_apoapsis)) / t_to_apoapsis ^ 2.
 lock a_vert to ship:prograde:upvector * 2 * (h_orbit - h - (ship:verticalspeed * t_to_apoapsis)) / t_to_apoapsis ^ 2.
 lock a_fwd to ship:prograde:forevector * (v_orbit - ship:velocity:orbit:mag) / t_to_apoapsis.
-lock a_total to a_fwd + a_vert.
+lock a_total to a_fwd + a_vert. // + a_gravity. // we need to thrust to counteract gravity
 function getP4ThrustDirection {
     //local dir to a_total:direction.
     //set t0 to time:seconds.
@@ -63,7 +63,12 @@ function getP4Throttle {
     print round(h) + " " + round(d_to_apoapsis, 4) + " " + round(t_to_apoapsis, 2) + " " + round(ship:orbit:apoapsis) + " "
           + round(ship:orbit:periapsis) + " " + round(ship:velocity:orbit:mag, 2) + " "
           + round(v_orbit - ship:velocity:orbit:mag, 2)
-          + " " + round(a_total:mag, 2) + " " + round(ret, 2) + " " + ship:longitude + " " + ship:latitude + " " + round(a_fwd:mag, 4) + round(a_vert:mag, 4).
+          + " " + round(a_total:mag, 2) + " " + round(ret, 2) + " " + round(a_fwd:mag, 4) + " " + round(a_vert:mag, 4).
+
+    if (v_orbit - ship:velocity:orbit:mag < 0.01 and t_to_apoapsis > 20) {
+        return 0.
+    }
+
     return ret.
 }
 
@@ -96,12 +101,13 @@ function launch {
         wait until p1_over.
     }
 
-    lock p2_over to true.
-    //if not p2_over {
-    //    print("v>50m/s - Beginning P2 Tip-Over 1").
-    //    lock steering to aoaToDirection(getP2Aoa()).
-    //    wait until h > 10000.
-    //}
+    lock p2_over to ship:altitude > 3000.
+    if not p2_over {
+        set steeringmanager:pitchtorquefactor to 20.
+        print("v>50m/s - Beginning P2 Tip-Over").
+        lock steering to aoaToDirection(55).
+        wait until p2_over.
+    }
 
     global engine_list to 1.
     list engines in engine_list.
@@ -109,10 +115,11 @@ function launch {
     lock boosters_dead to boostersDead().
     lock p3_over to p2_over and (stage:number = 1 or boosters_dead).
     if not p3_over {
-        set steeringmanager:pitchtorquefactor to 20.
+        //set steeringmanager:pitchtorquefactor to 20.
         //set steeringmanager:pitchtorqueadjust to 200.
+        set steeringmanager:pitchtorquefactor to 5.
         print("v>50m/s - Beginning P2 Tip-Over").
-        lock steering to aoaToDirection(getP3Aoa()).
+        lock steering to getP4ThrustDirection().
         //lock steering to aoaToDirection(90).
         wait until boosters_dead.
         print "h=" + round(h) + " v=" + round(ship:velocity:orbit:mag) + " - boosters empty".
@@ -130,13 +137,6 @@ function launch {
         //set kuniverse:timewarp:rate to 4.
         lock steering to getP4ThrustDirection().
         lock throttle to getP4Throttle().
-
-//        when (stage:liquidfuel < 0.05) then {
-//            lock throttle to 0.1.
-//            stage.
-//            wait until stage:ready.
-//            lock throttle to getP4Throttle().
-//        }
 
         wait until p4_over.
     }
