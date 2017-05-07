@@ -1,7 +1,8 @@
 @lazyglobal off.
 
+
 for craft in kuniverse:craftlist() {
-    if (craft:name = "Launcher 1") {
+    if (craft:name = "Orbiter 1") {
         kuniverse:launchcraft(craft).
     }
 }

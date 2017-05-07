@@ -9,6 +9,7 @@ function collectCrewReport {
             if not module:deployed {
                 print "Performing a crew report".
                 module:deploy().
+                return.
             }
         }
     }
@@ -24,6 +25,7 @@ function collectTemperature {
             if not module:deployed {
                 print "Performing a thermometer reading".
                 module:deploy().
+                return.
             }
         }
     }
@@ -39,6 +41,7 @@ function collectPressure {
             if not module:deployed {
                 print "Performing an atmospheric pressure reading".
                 module:deploy().
+                return.
             }
         }
     }

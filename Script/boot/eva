@@ -1,0 +1,43 @@
+
+
+
+function getEvaReport {
+    for module in ship:modulesnamed("ModuleScienceExperiment") {
+        print module.
+        if module:hasevent("EVA Report") {
+            print "Taking EVA report".
+            module:deploy().
+        }
+    }
+    return false.
+}
+
+global eva_vessel to 1.
+
+when not ship:messages:empty then {
+    set received to ship:messages:pop.
+    print "sent by " + received:sender:name + " at " + received:sentat.
+    print received:content.
+
+    if (received:content = "board") {
+        print "Boarding".
+        addons:eva:board.
+    }
+    else if (received:content = "store_data") {
+        print "Defragmenting data".
+        addons:eva:doevent(eva_vessel:rootpart, "Take Data").
+        addons:eva:doevent(eva_vessel:rootpart, "Store Experiments").
+    }
+    else if (received:content = "eva_report") {
+        print "Taking EVA report".
+        getEvaReport().
+    }
+    else {
+        set eva_vessel to vessel(received:content).
+        print "Vessel set to " + eva_vessel.
+    }
+
+    preserve.
+}
+
+wait until 0.

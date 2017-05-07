@@ -4,6 +4,8 @@ print "Launching LAUNCHER 2".
 runoncepath("0:lib/experiments.ks").
 runoncepath("0:lib/rtb.ks").
 
+collectPressure(). // on launchpad
+
 
 lock steering to heading(270, 45).
 
@@ -29,10 +31,21 @@ print "Deploying chute".
 stage.
 wait until ship:status = "LANDED".
 print "Performing landed science".
+
 collectGoo(3).
+collectTemperature().
+collectPressure().
 
 //returnControlToBase().
-
-print "Before you recover me, please take a splashed EVA report, a splashed thermometer reading, a splashed pressure reading, and a splashed crew report".
-print "Then basic rocketry, general rocketry and stability".
-print "Then take contracts to escape the atmosphere and orbit Kerbin".
+local crew to ship:crew[0].
+addons:eva:goeva(crew).
+wait 2.
+local crew_vessel to vessel(crew:name).
+local crew_conn to crew_vessel:connection.
+crew_conn:sendmessage(ship:name).
+crew_conn:sendmessage("eva_report").
+crew_conn:sendmessage("store_data").
+crew_conn:sendmessage("board").
+wait 2.
+collectCrewReport().
+print "Recover me!".

@@ -12,8 +12,8 @@ print "Taking off".
 global elist to 0.
 list engines in elist.
 
-when ship:altitude > 1000 then {
-    print "At 1000m, performing low flying science".
+when ship:altitude > 700 then {
+    print "At 700m, performing low flying science".
     collectCrewReport().
     collectGoo(4).
     collectTemperature().
@@ -27,11 +27,23 @@ print "Deploying chute".
 stage.
 wait until ship:status = "SPLASHED".
 print "Performing splashed science".
-collectGoo(3).
 
+collectGoo(3).
+collectTemperature().
 //returnControlToBase().
 
-print "Before you recover me, please take a splashed EVA report, a splashed thermometer reading, and a splashed crew report".
+local crew to ship:crew[0].
+addons:eva:goeva(crew).
+wait 2.
+local crew_vessel to vessel(crew:name).
+local crew_conn to crew_vessel:connection.
+crew_conn:sendmessage(ship:name).
+crew_conn:sendmessage("eva_report").
+crew_conn:sendmessage("store_data").
+crew_conn:sendmessage("board").
+wait 2.
+collectCrewReport().
+print "Recover me!".
 print "Then research survivability and launch launcher 2 MANUALLY".
 print "For launcher 2, take and store a barometer reading on the launch pad before take-off, then run launcher2.ks".
 // todo: EVA (and therefore storage), ocean crew report (landed @ocean crew report?)
